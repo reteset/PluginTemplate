@@ -1,0 +1,2323 @@
+<?xml version="1.0" encoding="iso-8859-1"?><DocumentData>
+<ProductVersion>8.5.1.0</ProductVersion>
+<ProductID>{ABF9EF9E-ECF6-4019-8A3E-908A6CFF4D1A}</ProductID>
+<IRProductName>AutoPlay Media Studio 8</IRProductName>
+<ProductType>Commercial</ProductType>
+<DocInfo>
+<Title/>
+<Author/>
+<Company/>
+<Copyright>Copyright © 2019</Copyright>
+<URL/>
+<Email/>
+<Comments/>
+<CreatedVersion>8.5.1.0 (Professional Edition Commercial)</CreatedVersion>
+<LastSavedVersion>8.5.1.0 (Professional Edition Commercial)</LastSavedVersion>
+</DocInfo>
+<ProjectInfo ToolTipStyle="0">
+<Office2007Theme Theme="5"/>
+<WindowStyles>
+<Width>790</Width>
+<Height>700</Height>
+<WindowTitle>Tiny Plugin Maker</WindowTitle>
+<WindowStyle>0</WindowStyle>
+<FillColor>0</FillColor>
+</WindowStyles>
+<WindowOptions>
+<Movable>1</Movable>
+<AlwaysOnTop>0</AlwaysOnTop>
+<Resizable>0</Resizable>
+<MinWidth>790</MinWidth>
+<MinHeight>545</MinHeight>
+</WindowOptions>
+<TransparentWindow>
+<TransparentImage/>
+<FitTrans>1</FitTrans>
+</TransparentWindow>
+<Icon>
+<UseCustomIcon>0</UseCustomIcon>
+<TaskbarVisibility>0</TaskbarVisibility>
+<IconFile/>
+</Icon>
+<IntroVideo>
+<AllowClickToSkip>1</AllowClickToSkip>
+<MediaWidth>630</MediaWidth>
+<MediaHeight>425</MediaHeight>
+<WindowWidth>630</WindowWidth>
+<WindowHeight>425</WindowHeight>
+<BackgroundColor>16777215</BackgroundColor>
+<MediaMode>1</MediaMode>
+<WindowMode>0</WindowMode>
+<VideoFileName/>
+<UseIntroVideo>0</UseIntroVideo>
+<VideoType>0</VideoType>
+<UseBorder>0</UseBorder>
+<TitleBar>0</TitleBar>
+<TitleBarText/>
+</IntroVideo>
+<AudioBGMusic>
+<ShuffleMode>0</ShuffleMode>
+<Repeat>1</Repeat>
+<BackVolume>255</BackVolume>
+<EffectsVolume>255</EffectsVolume>
+<Tracks/>
+</AudioBGMusic>
+<Globals>
+<Script>g_ReplacePluginName = "&lt;-PLUGIN_NAME-&gt;"
+g_ReplacePluginVersion = "&lt;-PLUGIN_VERS-&gt;"
+g_ReplacePluginInfo = "&lt;-PLUGIN_INFO-&gt;"
+g_ReplacePluginSource = "&lt;-PLUGIN_SOURCE-&gt;"
+g_ReplacePluginXML = "&lt;-PLUGIN_XML-&gt;"
+
+g_ReplaceFasmInclude = "&lt;-FASM-INC-&gt;"
+
+
+g_AssemblyTemplate = _SourceFolder.."\\AutoPlay\\Docs\\Templates\\AssemblyPlugin.asm"
+g_FasmCompilerPath = _SourceFolder.."\\AutoPlay\\Docs\\Fasm\\Fasm.exe"
+g_FasmIncludePath = _SourceFolder.."\\AutoPlay\\Docs\\Fasm\\include"
+
+
+function StringToByArrayStr(strString)
+	local strResult = "";
+	local nLength = String.Length(strString);
+	for i = 1 , nLength do
+		local Chr = String.Mid(strString, i, 1);
+		strResult = strResult .. tostring(String.Asc(Chr)) .. ","
+	end
+	return String.TrimRight(strResult, ",");
+end
+
+
+function CreateTemplate(strName,strVersion,strInfo,strScript,strXML)
+	
+	local strTemplate = TextFile.ReadToString(g_AssemblyTemplate);
+	
+	strTemplate = String.Replace(strTemplate, "&lt;-FASM-INC-&gt;",g_FasmIncludePath, true); -- without this FASM will fail to compile plugin
+	
+	strTemplate = String.Replace(strTemplate, "&lt;-PLUGIN_NAME-&gt;",strName, true);
+	strTemplate = String.Replace(strTemplate, "&lt;-PLUGIN_VERS-&gt;",strVersion, true);
+	strTemplate = String.Replace(strTemplate, "&lt;-PLUGIN_INFO-&gt;",strInfo, true);
+	strTemplate = String.Replace(strTemplate, "&lt;-PLUGIN_SOURCE-&gt;",StringToByArrayStr(strScript), true);
+	strTemplate = String.Replace(strTemplate, "&lt;-PLUGIN_XML-&gt;",StringToByArrayStr(strXML), true);
+	
+	local strPathToSave = _SourceFolder..string.format("\\AutoPlay\\Docs\\Plugins\\%s.asm",strName);
+	TextFile.WriteFromString(strPathToSave, strTemplate, false);
+
+	return strPathToSave;
+end
+
+function CompilePlugin(strFolder,strName,strVersion,strInfo,strScript,strXML)
+
+StatusDlg.Show(MB_ICONNONE, false);
+StatusDlg.ShowProgressMeter(false);
+StatusDlg.SetTitle("Working..");
+StatusDlg.SetMessage("     Executing Command...");
+
+local strTemplatePath = CreateTemplate(strName,strVersion,strInfo,strScript,strXML);
+local strPluginPath = string.format("%s\\%s.lmd",strFolder,strName);
+local strCommand = string.format("\"%s\" \"%s\" \"%s\"",g_FasmCompilerPath,strTemplatePath,strPluginPath);
+
+tblResult = CommandLine.Execute( strCommand, 0);
+
+  if (tblResult ~= nil ) then
+  
+    
+     Input.SetText("TargetFolder", tblResult.StdOut);
+     Input.SetText("Input2", tblResult.StdError);
+     Input.SetText("Input3", tblResult.ExitCode);
+     StatusDlg.Hide();
+
+	if(tblResult.ExitCode ~= 0) then
+		Dialog.Message("Error In Source Code",tblResult.StdError, MB_OK, MB_ICONEXCLAMATION);
+	end
+	--[[ -- Test compiled plugin
+	Application.LoadActionPlugin(strPluginPath);
+	nerror = Application.GetLastError();
+
+	-- If an error occurred, display the error message.
+	if (nerror ~= 0) then
+    	Dialog.Message("Error", _tblErrorMessages[nerror], MB_OK, MB_ICONEXCLAMATION);
+	end]]
+	
+	else
+
+     StatusDlg.Hide();
+     Dialog.Message("Error", "Failed To Execute command Line..", MB_OK, MB_ICONINFORMATION, MB_DEFBUTTON1);
+
+  end
+ end</Script>
+<BookMarks count="0">
+</BookMarks>
+<DesignCodeLine>5</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+</Globals>
+<Defaults>
+<StartupPage>_PageFirst</StartupPage>
+<MouseOverSoundDefault>AutoPlay\Audio\High1.ogg</MouseOverSoundDefault>
+<MouseClickSoundDefault>AutoPlay\Audio\Click1.ogg</MouseClickSoundDefault>
+<MemMngMethod>0</MemMngMethod>
+<UserPrivilegeLevel>0</UserPrivilegeLevel>
+</Defaults>
+<TargetMedia>
+<TargetMediaSize>4</TargetMediaSize>
+<CustomSize>0</CustomSize>
+</TargetMedia>
+<Group>
+<CurrentGrounp>0</CurrentGrounp>
+</Group>
+<ActionPlugins>
+<Plugin>CommandLine\CommandLine.lmd</Plugin>
+</ActionPlugins>
+<TemplateInfo>
+<Name/>
+<Author/>
+<Contact/>
+<Web/>
+<Copyright>Copyright © 2019</Copyright>
+<Desc/>
+<Categories>General</Categories>
+<Picture/>
+</TemplateInfo>
+<ReadOrder>
+<RTLReadOrder>0</RTLReadOrder>
+</ReadOrder>
+<CodeSigning>
+<CodeSignApps>0</CodeSignApps>
+<CodeSignLocation/>
+<CodeSignWithSHA256>1</CodeSignWithSHA256>
+<CodeSignCertificateFileSHA256/>
+<CodeSignCertificatePasswordSHA256>
+</CodeSignCertificatePasswordSHA256>
+<CodeSignTimeStampURLSHA256/>
+<CodeSignArgumentsSHA256/>
+<CodeSignWithSHA1>1</CodeSignWithSHA1>
+<CodeSignTimeStampURLSHA1/>
+<CodeSignArgumentsSHA1/>
+<CodeSignSHA1CertificateToUse>0</CodeSignSHA1CertificateToUse>
+<CodeSignCertificateFileSHA1/>
+<CodeSignCertificatePasswordSHA1>
+</CodeSignCertificatePasswordSHA1>
+<CodeSignDescription/>
+<CodeSignDescriptionURL/>
+</CodeSigning>
+<RuntimeSkin>
+<UseSkinFile>0</UseSkinFile>
+<SkinFilename/>
+<SkinSubStyle/>
+</RuntimeSkin>
+<Databases>
+<MySQL>0</MySQL>
+<SQLite3>0</SQLite3>
+<Oracle>0</Oracle>
+<ODBC>0</ODBC>
+<PostgreSQL>0</PostgreSQL>
+</Databases>
+<Event>
+<Name>On Startup</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>874512425</DesignCodeLine>
+<DesignCodeCol>2830382</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Shutdown</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>50331669</DesignCodeLine>
+<DesignCodeCol>4</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Size</Name>
+<Args>number e_WindowWidth, number e_WindowHeight, number e_PageWidth, number e_PageHeight, number e_Type</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>295395672</DesignCodeLine>
+<DesignCodeCol>224681656</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Menu</Name>
+<Args>number e_ID, table e_ItemInfo</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>295397072</DesignCodeLine>
+<DesignCodeCol>224680936</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<EXEResourceInfo>
+<ReplaceIcon>0</ReplaceIcon>
+<IconFilename/>
+<ReplaceVersionInfo>0</ReplaceVersionInfo>
+<FileVer1>1</FileVer1>
+<FileVer2>0</FileVer2>
+<FileVer3>0</FileVer3>
+<FileVer4>0</FileVer4>
+<ProductVer1>1</ProductVer1>
+<ProductVer2>0</ProductVer2>
+<ProductVer3>0</ProductVer3>
+<ProductVer4>0</ProductVer4>
+<Comments>Created with AutoPlay Media Studio</Comments>
+<Company>Indigo Rose Corporation</Company>
+<FileDescription>AutoPlay Application</FileDescription>
+<LegalCopyright>Runtime Engine Copyright © 2016 Indigo Rose Corporation (www.indigorose.com)</LegalCopyright>
+<LegalTrademarks>AutoPlay Media Studio is a Trademark of Indigo Rose Corporation</LegalTrademarks>
+<PrivateBuild/>
+<ProductName>AutoPlay Media Studio Runtime</ProductName>
+<SpecialBuild/>
+</EXEResourceInfo>
+<HGuidelines/>
+<VGuidelines/>
+<MenuBar>
+<Enabled>0</Enabled>
+<UseIcons>0</UseIcons>
+<BitmapIconFile/>
+<TransColor format="hex">ffffff</TransColor>
+<MenuItem>
+<Text>Main Menu &amp;1</Text>
+<ID>100</ID>
+<Enabled>1</Enabled>
+<Checked>0</Checked>
+<SubMenu>
+<MenuItem>
+<Text>Sub Menu &amp;1</Text>
+<ID>101</ID>
+<Enabled>1</Enabled>
+<Checked>0</Checked>
+<SubMenu/>
+<IconID>-1</IconID>
+</MenuItem>
+<MenuItem>
+<Text>Sub Menu &amp;2</Text>
+<ID>102</ID>
+<Enabled>1</Enabled>
+<Checked>0</Checked>
+<SubMenu/>
+<IconID>-1</IconID>
+</MenuItem>
+</SubMenu>
+<IconID>-1</IconID>
+</MenuItem>
+<MenuItem>
+<Text>Main Menu &amp;2</Text>
+<ID>200</ID>
+<Enabled>1</Enabled>
+<Checked>0</Checked>
+<SubMenu>
+<MenuItem>
+<Text>Sub Menu &amp;1</Text>
+<ID>201</ID>
+<Enabled>1</Enabled>
+<Checked>0</Checked>
+<SubMenu/>
+<IconID>-1</IconID>
+</MenuItem>
+<MenuItem>
+<Text>Sub Menu &amp;2</Text>
+<ID>202</ID>
+<Enabled>1</Enabled>
+<Checked>0</Checked>
+<SubMenu/>
+<IconID>-1</IconID>
+</MenuItem>
+</SubMenu>
+<IconID>-1</IconID>
+</MenuItem>
+</MenuBar>
+</ProjectInfo>
+<Page>
+<Name>Page1</Name>
+<InheritObs/>
+<InheritBG/>
+<Description/>
+<Keywords/>
+<Background>
+<Type>0</Type>
+<ImageStyle>0</ImageStyle>
+<TopColor>16711680</TopColor>
+<BottomColor>16777215</BottomColor>
+<UseCustomBackgroundSettings>0</UseCustomBackgroundSettings>
+<TransitionEffect/>
+<TransProps/>
+<NormalImage>
+<Filename/>
+</NormalImage>
+</Background>
+<Event>
+<Name>On Preload</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Show</Name>
+<Args/>
+<Script>Input.SetText("TargetFolder", _SourceFolder.."\\AutoPlay\\Docs\\Plugins");
+</Script>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>30</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Close</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Timer</Name>
+<Args>number e_ID</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Audio</Name>
+<Args>number e_Channel, string e_State</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Size</Name>
+<Args>number e_WindowWidth, number e_WindowHeight, number e_PageWidth, number e_PageHeight, number e_Type</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Menu</Name>
+<Args>number e_ID, table e_ItemInfo</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Key</Name>
+<Args>number e_Key, table e_Modifiers</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Mouse Button</Name>
+<Args>number e_Type, number e_X, number e_Y</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Mouse Move</Name>
+<Args>number e_X, number e_Y</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Mouse Wheel</Name>
+<Args>table e_Flags, number e_Delta, number e_X, number e_Y</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Object>
+<Type>40</Type>
+<Name>Plugin1</Name>
+<VisibleAtDesignTime>1</VisibleAtDesignTime>
+<VisibleAtRunTime>1</VisibleAtRunTime>
+<Locked>0</Locked>
+<Enabled>1</Enabled>
+<ToolTip/>
+<Cursor>0</Cursor>
+<Group>0</Group>
+<MaintainAspectRatio>0</MaintainAspectRatio>
+<Pin>0</Pin>
+<TabIndex>-1</TabIndex>
+<AutoResize>0</AutoResize>
+<Coordinates>
+<Top>9</Top>
+<Bottom>181</Bottom>
+<Left>10</Left>
+<Right>781</Right>
+</Coordinates>
+<Ratios>
+<WidthRatio>-1.000000</WidthRatio>
+<HeightRatio>-1.000000</HeightRatio>
+</Ratios>
+<Event>
+<Name>On Click</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Enter</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>1761637475</DesignCodeLine>
+<DesignCodeCol>7564911</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Leave</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>6</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Actions/>
+<PLUGIN>
+<DLLFile>Shape\Shape.apo</DLLFile>
+<CustomData>2,0,6710886,1,1,16777215,7,7</CustomData>
+</PLUGIN>
+<MouseOverSndMode>0</MouseOverSndMode>
+<MouseOverSound/>
+<MouseClickSndMode>0</MouseClickSndMode>
+<MouseClickSound/>
+</Object>
+<Object>
+<Type>40</Type>
+<Name>Plugin2</Name>
+<VisibleAtDesignTime>1</VisibleAtDesignTime>
+<VisibleAtRunTime>1</VisibleAtRunTime>
+<Locked>0</Locked>
+<Enabled>1</Enabled>
+<ToolTip/>
+<Cursor>0</Cursor>
+<Group>0</Group>
+<MaintainAspectRatio>0</MaintainAspectRatio>
+<Pin>0</Pin>
+<TabIndex>-1</TabIndex>
+<AutoResize>0</AutoResize>
+<Coordinates>
+<Top>190</Top>
+<Bottom>356</Bottom>
+<Left>10</Left>
+<Right>781</Right>
+</Coordinates>
+<Ratios>
+<WidthRatio>-1.000000</WidthRatio>
+<HeightRatio>-1.000000</HeightRatio>
+</Ratios>
+<Event>
+<Name>On Click</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Enter</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>1761637475</DesignCodeLine>
+<DesignCodeCol>7564911</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Leave</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>6</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Actions/>
+<PLUGIN>
+<DLLFile>Shape\Shape.apo</DLLFile>
+<CustomData>2,0,6710886,1,1,16777215,7,7</CustomData>
+</PLUGIN>
+<MouseOverSndMode>0</MouseOverSndMode>
+<MouseOverSound/>
+<MouseClickSndMode>0</MouseClickSndMode>
+<MouseClickSound/>
+</Object>
+<Object>
+<Type>7</Type>
+<Name>Script</Name>
+<VisibleAtDesignTime>1</VisibleAtDesignTime>
+<VisibleAtRunTime>1</VisibleAtRunTime>
+<Locked>0</Locked>
+<Enabled>1</Enabled>
+<ToolTip/>
+<Cursor>0</Cursor>
+<Group>0</Group>
+<MaintainAspectRatio>0</MaintainAspectRatio>
+<Pin>0</Pin>
+<TabIndex>-1</TabIndex>
+<AutoResize>0</AutoResize>
+<Coordinates>
+<Top>225</Top>
+<Bottom>341</Bottom>
+<Left>20</Left>
+<Right>771</Right>
+</Coordinates>
+<Ratios>
+<WidthRatio>-1.000000</WidthRatio>
+<HeightRatio>-1.000000</HeightRatio>
+</Ratios>
+<Event>
+<Name>On Key</Name>
+<Args>number e_Key, table e_Modifiers</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>285241193</DesignCodeLine>
+<DesignCodeCol>224677912</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Focus</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>1047687020</DesignCodeLine>
+<DesignCodeCol>6750208</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Char</Name>
+<Args>number e_Char, table e_Modifiers</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Actions/>
+<Text>
+<Body>Dialog.Message("Notice", "Hello World From A New Plugin.", MB_OK, MB_ICONINFORMATION, MB_DEFBUTTON1);</Body>
+<TextColor>0</TextColor>
+<BackgroundColor>16777215</BackgroundColor>
+<FontData>
+<FontName>Segoe UI</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>400</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<Alignment>0</Alignment>
+<RightToLeftReadingOrder>0</RightToLeftReadingOrder>
+</Text>
+<Box>
+<BorderStyle>1</BorderStyle>
+<VerticalScrollbar>1</VerticalScrollbar>
+<HorizontalScrollbar>0</HorizontalScrollbar>
+<Style>1</Style>
+<Mode>0</Mode>
+<Mask/>
+<MaskSymbol> </MaskSymbol>
+<MaskRetMode>0</MaskRetMode>
+<ReadOnly>0</ReadOnly>
+</Box>
+</Object>
+<Object>
+<Type>1</Type>
+<Name>Label1</Name>
+<VisibleAtDesignTime>1</VisibleAtDesignTime>
+<VisibleAtRunTime>1</VisibleAtRunTime>
+<Locked>0</Locked>
+<Enabled>1</Enabled>
+<ToolTip/>
+<Cursor>0</Cursor>
+<Group>0</Group>
+<MaintainAspectRatio>1</MaintainAspectRatio>
+<Pin>0</Pin>
+<TabIndex>-1</TabIndex>
+<AutoResize>0</AutoResize>
+<Coordinates>
+<Top>200</Top>
+<Bottom>223</Bottom>
+<Left>20</Left>
+<Right>131</Right>
+</Coordinates>
+<Ratios>
+<WidthRatio>-1.000000</WidthRatio>
+<HeightRatio>-1.000000</HeightRatio>
+</Ratios>
+<Event>
+<Name>On Click</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Right-Click</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Enter</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Leave</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Actions/>
+<Text>
+<Body>Your Lua Script : </Body>
+<NormalColor>10040064</NormalColor>
+<HighlightColor>10040064</HighlightColor>
+<MouseDownColor>10040064</MouseDownColor>
+<DisabledColor>12632256</DisabledColor>
+<FontData>
+<FontName>Segoe UI</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>700</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<Alignment>0</Alignment>
+<Orientation>0</Orientation>
+<AutoSize>1</AutoSize>
+<MouseOverSndMode>0</MouseOverSndMode>
+<MouseOverSound/>
+<MouseClickSndMode>0</MouseClickSndMode>
+<MouseClickSound/>
+<OriginalRect>
+<Top>200</Top>
+<Bottom>223</Bottom>
+<Left>20</Left>
+<Right>131</Right>
+</OriginalRect>
+</Text>
+</Object>
+<Object>
+<Type>7</Type>
+<Name>Name</Name>
+<VisibleAtDesignTime>1</VisibleAtDesignTime>
+<VisibleAtRunTime>1</VisibleAtRunTime>
+<Locked>0</Locked>
+<Enabled>1</Enabled>
+<ToolTip/>
+<Cursor>0</Cursor>
+<Group>0</Group>
+<MaintainAspectRatio>0</MaintainAspectRatio>
+<Pin>0</Pin>
+<TabIndex>-1</TabIndex>
+<AutoResize>0</AutoResize>
+<Coordinates>
+<Top>24</Top>
+<Bottom>47</Bottom>
+<Left>145</Left>
+<Right>765</Right>
+</Coordinates>
+<Ratios>
+<WidthRatio>-1.000000</WidthRatio>
+<HeightRatio>-1.000000</HeightRatio>
+</Ratios>
+<Event>
+<Name>On Key</Name>
+<Args>number e_Key, table e_Modifiers</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>1081116672</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Focus</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Char</Name>
+<Args>number e_Char, table e_Modifiers</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Actions/>
+<Text>
+<Body>TestPlugin</Body>
+<TextColor>0</TextColor>
+<BackgroundColor>16777215</BackgroundColor>
+<FontData>
+<FontName>Segoe UI</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>400</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<Alignment>0</Alignment>
+<RightToLeftReadingOrder>0</RightToLeftReadingOrder>
+</Text>
+<Box>
+<BorderStyle>1</BorderStyle>
+<VerticalScrollbar>1</VerticalScrollbar>
+<HorizontalScrollbar>0</HorizontalScrollbar>
+<Style>0</Style>
+<Mode>0</Mode>
+<Mask/>
+<MaskSymbol> </MaskSymbol>
+<MaskRetMode>0</MaskRetMode>
+<ReadOnly>0</ReadOnly>
+</Box>
+</Object>
+<Object>
+<Type>1</Type>
+<Name>Label2</Name>
+<VisibleAtDesignTime>1</VisibleAtDesignTime>
+<VisibleAtRunTime>1</VisibleAtRunTime>
+<Locked>0</Locked>
+<Enabled>1</Enabled>
+<ToolTip/>
+<Cursor>0</Cursor>
+<Group>0</Group>
+<MaintainAspectRatio>1</MaintainAspectRatio>
+<Pin>0</Pin>
+<TabIndex>-1</TabIndex>
+<AutoResize>0</AutoResize>
+<Coordinates>
+<Top>25</Top>
+<Bottom>48</Bottom>
+<Left>40</Left>
+<Right>134</Right>
+</Coordinates>
+<Ratios>
+<WidthRatio>-1.000000</WidthRatio>
+<HeightRatio>-1.000000</HeightRatio>
+</Ratios>
+<Event>
+<Name>On Click</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Right-Click</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Enter</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Leave</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Actions/>
+<Text>
+<Body>Plugin Name :</Body>
+<NormalColor>10040064</NormalColor>
+<HighlightColor>10040064</HighlightColor>
+<MouseDownColor>10040064</MouseDownColor>
+<DisabledColor>12632256</DisabledColor>
+<FontData>
+<FontName>Segoe UI</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>700</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<Alignment>2</Alignment>
+<Orientation>0</Orientation>
+<AutoSize>1</AutoSize>
+<MouseOverSndMode>0</MouseOverSndMode>
+<MouseOverSound/>
+<MouseClickSndMode>0</MouseClickSndMode>
+<MouseClickSound/>
+<OriginalRect>
+<Top>25</Top>
+<Bottom>48</Bottom>
+<Left>40</Left>
+<Right>134</Right>
+</OriginalRect>
+</Text>
+</Object>
+<Object>
+<Type>7</Type>
+<Name>Version</Name>
+<VisibleAtDesignTime>1</VisibleAtDesignTime>
+<VisibleAtRunTime>1</VisibleAtRunTime>
+<Locked>0</Locked>
+<Enabled>1</Enabled>
+<ToolTip/>
+<Cursor>0</Cursor>
+<Group>0</Group>
+<MaintainAspectRatio>0</MaintainAspectRatio>
+<Pin>0</Pin>
+<TabIndex>-1</TabIndex>
+<AutoResize>0</AutoResize>
+<Coordinates>
+<Top>54</Top>
+<Bottom>77</Bottom>
+<Left>145</Left>
+<Right>766</Right>
+</Coordinates>
+<Ratios>
+<WidthRatio>-1.000000</WidthRatio>
+<HeightRatio>-1.000000</HeightRatio>
+</Ratios>
+<Event>
+<Name>On Key</Name>
+<Args>number e_Key, table e_Modifiers</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>1081116672</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Focus</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Char</Name>
+<Args>number e_Char, table e_Modifiers</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Actions/>
+<Text>
+<Body>1.0.0.0</Body>
+<TextColor>0</TextColor>
+<BackgroundColor>16777215</BackgroundColor>
+<FontData>
+<FontName>Segoe UI</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>400</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<Alignment>0</Alignment>
+<RightToLeftReadingOrder>0</RightToLeftReadingOrder>
+</Text>
+<Box>
+<BorderStyle>1</BorderStyle>
+<VerticalScrollbar>1</VerticalScrollbar>
+<HorizontalScrollbar>0</HorizontalScrollbar>
+<Style>0</Style>
+<Mode>0</Mode>
+<Mask/>
+<MaskSymbol> </MaskSymbol>
+<MaskRetMode>0</MaskRetMode>
+<ReadOnly>0</ReadOnly>
+</Box>
+</Object>
+<Object>
+<Type>1</Type>
+<Name>Label3</Name>
+<VisibleAtDesignTime>1</VisibleAtDesignTime>
+<VisibleAtRunTime>1</VisibleAtRunTime>
+<Locked>0</Locked>
+<Enabled>1</Enabled>
+<ToolTip/>
+<Cursor>0</Cursor>
+<Group>0</Group>
+<MaintainAspectRatio>1</MaintainAspectRatio>
+<Pin>0</Pin>
+<TabIndex>-1</TabIndex>
+<AutoResize>0</AutoResize>
+<Coordinates>
+<Top>54</Top>
+<Bottom>77</Bottom>
+<Left>30</Left>
+<Right>134</Right>
+</Coordinates>
+<Ratios>
+<WidthRatio>-1.000000</WidthRatio>
+<HeightRatio>-1.000000</HeightRatio>
+</Ratios>
+<Event>
+<Name>On Click</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Right-Click</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Enter</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Leave</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Actions/>
+<Text>
+<Body>Plugin Version :</Body>
+<NormalColor>10040064</NormalColor>
+<HighlightColor>10040064</HighlightColor>
+<MouseDownColor>10040064</MouseDownColor>
+<DisabledColor>12632256</DisabledColor>
+<FontData>
+<FontName>Segoe UI</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>700</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<Alignment>2</Alignment>
+<Orientation>0</Orientation>
+<AutoSize>1</AutoSize>
+<MouseOverSndMode>0</MouseOverSndMode>
+<MouseOverSound/>
+<MouseClickSndMode>0</MouseClickSndMode>
+<MouseClickSound/>
+<OriginalRect>
+<Top>54</Top>
+<Bottom>77</Bottom>
+<Left>30</Left>
+<Right>134</Right>
+</OriginalRect>
+</Text>
+</Object>
+<Object>
+<Type>7</Type>
+<Name>Info</Name>
+<VisibleAtDesignTime>1</VisibleAtDesignTime>
+<VisibleAtRunTime>1</VisibleAtRunTime>
+<Locked>0</Locked>
+<Enabled>1</Enabled>
+<ToolTip/>
+<Cursor>0</Cursor>
+<Group>0</Group>
+<MaintainAspectRatio>0</MaintainAspectRatio>
+<Pin>0</Pin>
+<TabIndex>-1</TabIndex>
+<AutoResize>0</AutoResize>
+<Coordinates>
+<Top>86</Top>
+<Bottom>166</Bottom>
+<Left>145</Left>
+<Right>766</Right>
+</Coordinates>
+<Ratios>
+<WidthRatio>-1.000000</WidthRatio>
+<HeightRatio>-1.000000</HeightRatio>
+</Ratios>
+<Event>
+<Name>On Key</Name>
+<Args>number e_Key, table e_Modifiers</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>285241193</DesignCodeLine>
+<DesignCodeCol>224677912</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Focus</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>1047687020</DesignCodeLine>
+<DesignCodeCol>6750208</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Char</Name>
+<Args>number e_Char, table e_Modifiers</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Actions/>
+<Text>
+<Body>AssemblyPlugin Plugin for AutoPlay Media Studio Created by http://www.amsplugins.com Copyright ©  http://www.amsplugins.com</Body>
+<TextColor>0</TextColor>
+<BackgroundColor>16777215</BackgroundColor>
+<FontData>
+<FontName>Segoe UI</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>400</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<Alignment>0</Alignment>
+<RightToLeftReadingOrder>0</RightToLeftReadingOrder>
+</Text>
+<Box>
+<BorderStyle>1</BorderStyle>
+<VerticalScrollbar>1</VerticalScrollbar>
+<HorizontalScrollbar>0</HorizontalScrollbar>
+<Style>1</Style>
+<Mode>0</Mode>
+<Mask/>
+<MaskSymbol> </MaskSymbol>
+<MaskRetMode>0</MaskRetMode>
+<ReadOnly>0</ReadOnly>
+</Box>
+</Object>
+<Object>
+<Type>1</Type>
+<Name>Label4</Name>
+<VisibleAtDesignTime>1</VisibleAtDesignTime>
+<VisibleAtRunTime>1</VisibleAtRunTime>
+<Locked>0</Locked>
+<Enabled>1</Enabled>
+<ToolTip/>
+<Cursor>0</Cursor>
+<Group>0</Group>
+<MaintainAspectRatio>1</MaintainAspectRatio>
+<Pin>0</Pin>
+<TabIndex>-1</TabIndex>
+<AutoResize>0</AutoResize>
+<Coordinates>
+<Top>86</Top>
+<Bottom>109</Bottom>
+<Left>50</Left>
+<Right>136</Right>
+</Coordinates>
+<Ratios>
+<WidthRatio>-1.000000</WidthRatio>
+<HeightRatio>-1.000000</HeightRatio>
+</Ratios>
+<Event>
+<Name>On Click</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Right-Click</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Enter</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Leave</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Actions/>
+<Text>
+<Body>Author Info :</Body>
+<NormalColor>10040064</NormalColor>
+<HighlightColor>10040064</HighlightColor>
+<MouseDownColor>10040064</MouseDownColor>
+<DisabledColor>12632256</DisabledColor>
+<FontData>
+<FontName>Segoe UI</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>700</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<Alignment>2</Alignment>
+<Orientation>0</Orientation>
+<AutoSize>1</AutoSize>
+<MouseOverSndMode>0</MouseOverSndMode>
+<MouseOverSound/>
+<MouseClickSndMode>0</MouseClickSndMode>
+<MouseClickSound/>
+<OriginalRect>
+<Top>86</Top>
+<Bottom>109</Bottom>
+<Left>50</Left>
+<Right>136</Right>
+</OriginalRect>
+</Text>
+</Object>
+<Object>
+<Type>40</Type>
+<Name>Plugin3</Name>
+<VisibleAtDesignTime>1</VisibleAtDesignTime>
+<VisibleAtRunTime>1</VisibleAtRunTime>
+<Locked>0</Locked>
+<Enabled>1</Enabled>
+<ToolTip/>
+<Cursor>0</Cursor>
+<Group>0</Group>
+<MaintainAspectRatio>0</MaintainAspectRatio>
+<Pin>0</Pin>
+<TabIndex>-1</TabIndex>
+<AutoResize>0</AutoResize>
+<Coordinates>
+<Top>365</Top>
+<Bottom>551</Bottom>
+<Left>10</Left>
+<Right>781</Right>
+</Coordinates>
+<Ratios>
+<WidthRatio>-1.000000</WidthRatio>
+<HeightRatio>-1.000000</HeightRatio>
+</Ratios>
+<Event>
+<Name>On Click</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Enter</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>1761637475</DesignCodeLine>
+<DesignCodeCol>7564911</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Leave</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>6</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Actions/>
+<PLUGIN>
+<DLLFile>Shape\Shape.apo</DLLFile>
+<CustomData>2,0,6710886,1,1,16777215,7,7</CustomData>
+</PLUGIN>
+<MouseOverSndMode>0</MouseOverSndMode>
+<MouseOverSound/>
+<MouseClickSndMode>0</MouseClickSndMode>
+<MouseClickSound/>
+</Object>
+<Object>
+<Type>7</Type>
+<Name>XML</Name>
+<VisibleAtDesignTime>1</VisibleAtDesignTime>
+<VisibleAtRunTime>1</VisibleAtRunTime>
+<Locked>0</Locked>
+<Enabled>1</Enabled>
+<ToolTip/>
+<Cursor>0</Cursor>
+<Group>0</Group>
+<MaintainAspectRatio>0</MaintainAspectRatio>
+<Pin>0</Pin>
+<TabIndex>-1</TabIndex>
+<AutoResize>0</AutoResize>
+<Coordinates>
+<Top>400</Top>
+<Bottom>536</Bottom>
+<Left>20</Left>
+<Right>771</Right>
+</Coordinates>
+<Ratios>
+<WidthRatio>-1.000000</WidthRatio>
+<HeightRatio>-1.000000</HeightRatio>
+</Ratios>
+<Event>
+<Name>On Key</Name>
+<Args>number e_Key, table e_Modifiers</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>285241193</DesignCodeLine>
+<DesignCodeCol>224677912</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Focus</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>1047687020</DesignCodeLine>
+<DesignCodeCol>6750208</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Char</Name>
+<Args>number e_Char, table e_Modifiers</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Actions/>
+<Text>
+<Body>&lt;ActionTemplates&gt;&lt;/ActionTemplates&gt;</Body>
+<TextColor>0</TextColor>
+<BackgroundColor>16777215</BackgroundColor>
+<FontData>
+<FontName>Segoe UI</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>400</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<Alignment>0</Alignment>
+<RightToLeftReadingOrder>0</RightToLeftReadingOrder>
+</Text>
+<Box>
+<BorderStyle>1</BorderStyle>
+<VerticalScrollbar>1</VerticalScrollbar>
+<HorizontalScrollbar>0</HorizontalScrollbar>
+<Style>1</Style>
+<Mode>0</Mode>
+<Mask/>
+<MaskSymbol> </MaskSymbol>
+<MaskRetMode>0</MaskRetMode>
+<ReadOnly>0</ReadOnly>
+</Box>
+</Object>
+<Object>
+<Type>1</Type>
+<Name>Label5</Name>
+<VisibleAtDesignTime>1</VisibleAtDesignTime>
+<VisibleAtRunTime>1</VisibleAtRunTime>
+<Locked>0</Locked>
+<Enabled>1</Enabled>
+<ToolTip/>
+<Cursor>0</Cursor>
+<Group>0</Group>
+<MaintainAspectRatio>1</MaintainAspectRatio>
+<Pin>0</Pin>
+<TabIndex>-1</TabIndex>
+<AutoResize>0</AutoResize>
+<Coordinates>
+<Top>375</Top>
+<Bottom>398</Bottom>
+<Left>20</Left>
+<Right>148</Right>
+</Coordinates>
+<Ratios>
+<WidthRatio>-1.000000</WidthRatio>
+<HeightRatio>-1.000000</HeightRatio>
+</Ratios>
+<Event>
+<Name>On Click</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Right-Click</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Enter</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Leave</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Actions/>
+<Text>
+<Body>Your Actions XML : </Body>
+<NormalColor>10040064</NormalColor>
+<HighlightColor>10040064</HighlightColor>
+<MouseDownColor>10040064</MouseDownColor>
+<DisabledColor>12632256</DisabledColor>
+<FontData>
+<FontName>Segoe UI</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>700</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<Alignment>0</Alignment>
+<Orientation>0</Orientation>
+<AutoSize>1</AutoSize>
+<MouseOverSndMode>0</MouseOverSndMode>
+<MouseOverSound/>
+<MouseClickSndMode>0</MouseClickSndMode>
+<MouseClickSound/>
+<OriginalRect>
+<Top>375</Top>
+<Bottom>398</Bottom>
+<Left>20</Left>
+<Right>148</Right>
+</OriginalRect>
+</Text>
+</Object>
+<Object>
+<Type>20</Type>
+<Name>xButton1</Name>
+<VisibleAtDesignTime>1</VisibleAtDesignTime>
+<VisibleAtRunTime>1</VisibleAtRunTime>
+<Locked>0</Locked>
+<Enabled>1</Enabled>
+<ToolTip/>
+<Cursor>0</Cursor>
+<Group>0</Group>
+<MaintainAspectRatio>0</MaintainAspectRatio>
+<Pin>0</Pin>
+<TabIndex>-1</TabIndex>
+<AutoResize>0</AutoResize>
+<Coordinates>
+<Top>605</Top>
+<Bottom>656</Bottom>
+<Left>205</Left>
+<Right>516</Right>
+</Coordinates>
+<Ratios>
+<WidthRatio>-1.000000</WidthRatio>
+<HeightRatio>-1.000000</HeightRatio>
+</Ratios>
+<Event>
+<Name>On Click</Name>
+<Args/>
+<Script>local strName = Input.GetText("Name");
+local strVersion = Input.GetText("Version");
+local strInfo = Input.GetText("Info");
+
+local strScript = Input.GetText("Script");
+local strXML = Input.GetText("XML");
+
+local strFolder = Input.GetText("TargetFolder");
+
+if(strName == "") then
+	Dialog.Message("Error In Name Field", "A plugin can not be created without a name !\r\n Let me do it for you, how about 'MySuperPlugin' ? ", MB_OK, MB_ICONEXCLAMATION, MB_DEFBUTTON1);
+	Input.SetText("Name", "MySuperPlugin");
+elseif(strVersion == "") then
+	Dialog.Message("Error In Version Field", "Giving a version number to your plugin is a good idea !\r\n Let me do it for you, how about '1.0.0.0' ? ", MB_OK, MB_ICONEXCLAMATION, MB_DEFBUTTON1);
+	Input.SetText("Version", "1.0.0.0");
+elseif(strInfo == "") then
+	Dialog.Message("Error In Author Info Field", "Hmm Developer doesn't want to be known  !\r\n But you should enter at least single character there, how about '"..strName.."' ? ", MB_OK, MB_ICONEXCLAMATION, MB_DEFBUTTON1);
+	Input.SetText("Info", strName);
+elseif(strXML == "") then
+	strXML = "&lt;ActionTemplates&gt;&lt;/ActionTemplates&gt;"
+else
+
+	if(strXML == "") then
+		strXML = "&lt;ActionTemplates&gt;&lt;/ActionTemplates&gt;"
+	end
+
+	if(strScript == "") then
+		Dialog.Message("Error In Script Field", "This plugin will do nothing without a source script !\r\n Let me add a test messagebox action ", MB_OK, MB_ICONEXCLAMATION, MB_DEFBUTTON1);
+		strScript = "Dialog.Message(\"Notice\", \"Hello World From New Plugin.\", MB_OK, MB_ICONINFORMATION, MB_DEFBUTTON1);"
+	end
+	
+	if(strFolder == "") then
+		Dialog.Message("Error In Folder Field", "Compile plugin location is empty !\r\n It will be compiled in to default folder. ", MB_OK, MB_ICONEXCLAMATION, MB_DEFBUTTON1);
+		strFolder = _SourceFolder.."\\AutoPlay\\Docs\\Plugins"
+	end
+	 CompilePlugin(strFolder,strName,strVersion,strInfo,strScript,strXML);
+end</Script>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>35</DesignCodeLine>
+<DesignCodeCol>26</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Right-Click</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Enter</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Leave</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Hyperlink</Name>
+<Args>string e_Hyperlink</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Actions/>
+<Options>
+<Text>Build Plugin</Text>
+<TextColor format="hex">000000</TextColor>
+<EnableMarkup>0</EnableMarkup>
+<ButtonImage/>
+<TextAlignment>2</TextAlignment>
+<ImageAlignment>0</ImageAlignment>
+<ImageTextRelation>3</ImageTextRelation>
+<Theme>6</Theme>
+<Style>0</Style>
+<State>0</State>
+<MouseOverSoundMode>0</MouseOverSoundMode>
+<MouseOverSound/>
+<MouseClickSoundMode>0</MouseClickSoundMode>
+<MouseClickSound/>
+</Options>
+<FontData>
+<FontName>Segoe UI</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-12</Height>
+<Weight>400</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+</Object>
+<Object>
+<Type>1</Type>
+<Name>Label6</Name>
+<VisibleAtDesignTime>1</VisibleAtDesignTime>
+<VisibleAtRunTime>1</VisibleAtRunTime>
+<Locked>0</Locked>
+<Enabled>1</Enabled>
+<ToolTip/>
+<Cursor>0</Cursor>
+<Group>0</Group>
+<MaintainAspectRatio>1</MaintainAspectRatio>
+<Pin>0</Pin>
+<TabIndex>-1</TabIndex>
+<AutoResize>0</AutoResize>
+<Coordinates>
+<Top>565</Top>
+<Bottom>588</Bottom>
+<Left>5</Left>
+<Right>94</Right>
+</Coordinates>
+<Ratios>
+<WidthRatio>-1.000000</WidthRatio>
+<HeightRatio>-1.000000</HeightRatio>
+</Ratios>
+<Event>
+<Name>On Click</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Right-Click</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Enter</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Leave</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Actions/>
+<Text>
+<Body>Build Folder :</Body>
+<NormalColor>10040064</NormalColor>
+<HighlightColor>10040064</HighlightColor>
+<MouseDownColor>10040064</MouseDownColor>
+<DisabledColor>12632256</DisabledColor>
+<FontData>
+<FontName>Segoe UI</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>700</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<Alignment>2</Alignment>
+<Orientation>0</Orientation>
+<AutoSize>1</AutoSize>
+<MouseOverSndMode>0</MouseOverSndMode>
+<MouseOverSound/>
+<MouseClickSndMode>0</MouseClickSndMode>
+<MouseClickSound/>
+<OriginalRect>
+<Top>565</Top>
+<Bottom>588</Bottom>
+<Left>5</Left>
+<Right>94</Right>
+</OriginalRect>
+</Text>
+</Object>
+<Object>
+<Type>7</Type>
+<Name>TargetFolder</Name>
+<VisibleAtDesignTime>1</VisibleAtDesignTime>
+<VisibleAtRunTime>1</VisibleAtRunTime>
+<Locked>0</Locked>
+<Enabled>1</Enabled>
+<ToolTip/>
+<Cursor>0</Cursor>
+<Group>0</Group>
+<MaintainAspectRatio>0</MaintainAspectRatio>
+<Pin>0</Pin>
+<TabIndex>-1</TabIndex>
+<AutoResize>0</AutoResize>
+<Coordinates>
+<Top>565</Top>
+<Bottom>588</Bottom>
+<Left>100</Left>
+<Right>681</Right>
+</Coordinates>
+<Ratios>
+<WidthRatio>-1.000000</WidthRatio>
+<HeightRatio>-1.000000</HeightRatio>
+</Ratios>
+<Event>
+<Name>On Key</Name>
+<Args>number e_Key, table e_Modifiers</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>1081116672</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Focus</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Char</Name>
+<Args>number e_Char, table e_Modifiers</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Actions/>
+<Text>
+<Body/>
+<TextColor>0</TextColor>
+<BackgroundColor>16777215</BackgroundColor>
+<FontData>
+<FontName>Segoe UI</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-13</Height>
+<Weight>400</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+<Alignment>0</Alignment>
+<RightToLeftReadingOrder>0</RightToLeftReadingOrder>
+</Text>
+<Box>
+<BorderStyle>1</BorderStyle>
+<VerticalScrollbar>1</VerticalScrollbar>
+<HorizontalScrollbar>0</HorizontalScrollbar>
+<Style>0</Style>
+<Mode>0</Mode>
+<Mask/>
+<MaskSymbol> </MaskSymbol>
+<MaskRetMode>0</MaskRetMode>
+<ReadOnly>0</ReadOnly>
+</Box>
+</Object>
+<Object>
+<Type>20</Type>
+<Name>xButton3</Name>
+<VisibleAtDesignTime>1</VisibleAtDesignTime>
+<VisibleAtRunTime>1</VisibleAtRunTime>
+<Locked>0</Locked>
+<Enabled>1</Enabled>
+<ToolTip/>
+<Cursor>0</Cursor>
+<Group>0</Group>
+<MaintainAspectRatio>0</MaintainAspectRatio>
+<Pin>0</Pin>
+<TabIndex>-1</TabIndex>
+<AutoResize>0</AutoResize>
+<Coordinates>
+<Top>565</Top>
+<Bottom>588</Bottom>
+<Left>690</Left>
+<Right>776</Right>
+</Coordinates>
+<Ratios>
+<WidthRatio>-1.000000</WidthRatio>
+<HeightRatio>-1.000000</HeightRatio>
+</Ratios>
+<Event>
+<Name>On Click</Name>
+<Args/>
+<Script>local strFolder = Dialog.FolderBrowse("Please select a folder:", _SourceFolder.."\\AutoPlay\\Docs\\Plugins");
+if(strFolder ~= "CANCEL") then
+	Input.SetText("TargetFolder", strFolder);
+end
+</Script>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>2</DesignCodeLine>
+<DesignCodeCol>1</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Right-Click</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Enter</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Leave</Name>
+<Args/>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Event>
+<Name>On Hyperlink</Name>
+<Args>string e_Hyperlink</Args>
+<Script/>
+<TreeStates>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+<TreeState>0</TreeState>
+</TreeStates>
+<DesignCodeLine>0</DesignCodeLine>
+<DesignCodeCol>0</DesignCodeCol>
+<BookMarks count="0">
+</BookMarks>
+</Event>
+<Actions/>
+<Options>
+<Text>Browse</Text>
+<TextColor format="hex">000000</TextColor>
+<EnableMarkup>0</EnableMarkup>
+<ButtonImage/>
+<TextAlignment>2</TextAlignment>
+<ImageAlignment>0</ImageAlignment>
+<ImageTextRelation>3</ImageTextRelation>
+<Theme>6</Theme>
+<Style>0</Style>
+<State>0</State>
+<MouseOverSoundMode>0</MouseOverSoundMode>
+<MouseOverSound/>
+<MouseClickSoundMode>0</MouseClickSoundMode>
+<MouseClickSound/>
+</Options>
+<FontData>
+<FontName>Segoe UI</FontName>
+<CharacterSet>0</CharacterSet>
+<Height>-12</Height>
+<Weight>400</Weight>
+<Italic>0</Italic>
+<Underline>0</Underline>
+<StrikeOut>0</StrikeOut>
+<AntiAlias>1</AntiAlias>
+</FontData>
+</Object>
+<HGuidelines/>
+<VGuidelines/>
+</Page>
+<SugDialogs/>
+<MissingTechs>
+<DlgTitle>Missing Technologies</DlgTitle>
+<DlgMsg>This program requires the following technologies which cannot be located on your system.
+
+Please double-click on each item to find out how to install it.</DlgMsg>
+<BtnAbort>Abort</BtnAbort>
+<BtnCancel>Continue</BtnCancel>
+<BtnHelp>Help</BtnHelp>
+<ShowHelpBtn>0</ShowHelpBtn>
+<HelpURL>http://www.yourdomain.com/help.htm</HelpURL>
+</MissingTechs>
+<ProgramPrefs>
+<OutputFolder/>
+<EXEName>autorun.exe</EXEName>
+<EnableAutoPlayFeatureBTF>1</EnableAutoPlayFeatureBTF>
+<EnableAutoPlayFeatureCDRW>1</EnableAutoPlayFeatureCDRW>
+<EnableAutoPlayFeatureISO>1</EnableAutoPlayFeatureISO>
+<EnableAutoPlayFeatureSFX>0</EnableAutoPlayFeatureSFX>
+<TimeStampFilesBTF>0</TimeStampFilesBTF>
+<TimeStampFilesCDRW>0</TimeStampFilesCDRW>
+<TimeStampFilesISO>0</TimeStampFilesISO>
+<ISOImageFile/>
+<SelfExtractingZIPfile/>
+<ZIPMessage>Loading</ZIPMessage>
+<ZIPShowProgress>1</ZIPShowProgress>
+<CDVolumeIdentifier>NEWDISC</CDVolumeIdentifier>
+<CacheFileData>1</CacheFileData>
+<UseBurnProof>1</UseBurnProof>
+<BuildType>0</BuildType>
+<DriveLetter/>
+<UsePassword>0</UsePassword>
+<OpenFolder>1</OpenFolder>
+<ObscureFilenames>0</ObscureFilenames>
+<ObscureDataFolder>AutoPlay</ObscureDataFolder>
+</ProgramPrefs>
+</DocumentData>

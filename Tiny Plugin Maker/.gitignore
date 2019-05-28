@@ -1,0 +1,15 @@
+*.lmd
+*.lic
+Autosave/
+CD_Root/autorun.exe
+CD_Root/lua5.1.dll
+CD_Root/lua51.dll
+CD_Root/AutoPlay/autorun.cdd
+CD_Root/AutoPlay/Audio
+CD_Root/AutoPlay/Buttons
+CD_Root/AutoPlay/Flash
+CD_Root/AutoPlay/Icons
+CD_Root/AutoPlay/Images
+CD_Root/AutoPlay/Plugins
+CD_Root/AutoPlay/Scripts
+CD_Root/AutoPlay/Videos
